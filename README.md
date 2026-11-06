@@ -30,3 +30,8 @@ The demo stores products, cart, wishlist, reviews and orders in browser `localSt
 - The admin page is a demonstration interface, not secure production administration.
 - Tailwind CSS and Google Fonts load from CDNs; an internet connection is needed for those external resources and the sample product photography.
 - Replace sample product photography, descriptions, contact details and prices with client-approved content before presenting as a live store.
+
+
+## Free WhatsApp order notification demo
+
+The checkout creates a pre-filled WhatsApp message for the Avelura number **+91 93903 15117**. On order submission, the browser attempts to open WhatsApp with the order ID, customer details, delivery address, line items, shipping and total. The sender must tap **Send** in WhatsApp; a static front-end website cannot silently send a message. If the browser blocks the new tab, the confirmation page includes a Send order on WhatsApp link. This uses the free `wa.me` click-to-chat flow and does not require a WhatsApp API or backend.

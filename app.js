@@ -35,7 +35,27 @@ function removeCart(id){cart=cart.filter(x=>x.id!==id);set('cart',cart);cartPage
 function changeQty(n){let e=document.getElementById('qty');e.textContent=Math.max(1,Math.min(20,Number(e.textContent)+n))}
 function sortProducts(v){let a=[...products];if(qs.get('category'))a=a.filter(p=>p.category===qs.get('category'));if(v==='low')a.sort((x,y)=>x.price-y.price);if(v==='high')a.sort((x,y)=>y.price-x.price);if(v==='rating')a.sort((x,y)=>y.rating-x.rating);document.getElementById('shopgrid').innerHTML=a.map(card).join('')}
 function addReview(e,id){e.preventDefault();reviews[id]=reviews[id]||[];reviews[id].push({name:document.getElementById('reviewname').value,text:document.getElementById('reviewtext').value});set('reviews',reviews);toast('Thank you for sharing your note!');productPage()}
-function placeOrder(e){e.preventDefault();let f=new FormData(e.target),total=cart.reduce((s,i)=>s+(product(i.id)?.price||0)*i.qty,0);let o={id:Date.now().toString().slice(-7),name:f.get('name'),phone:f.get('phone'),email:f.get('email'),address:f.get('address')+', '+f.get('city')+' '+f.get('pin'),payment:f.get('payment'),total:total+(total>=1999?0:99),date:new Date().toLocaleDateString('en-IN'),status:'Received',items:cart};orders.unshift(o);set('orders',orders);cart=[];set('cart',cart);shell(`<main class="page-wrap"><div class="empty"><div style="font-size:55px;color:var(--gold)">✿</div><span class="eyebrow">A little joy is on its way</span><h2>Thank you, ${o.name}.</h2><p>Your demo order <b>#${o.id}</b> has been placed successfully.</p><p style="font-size:11px">This is a front-end demonstration. No payment or real shipment has been initiated.</p><a class="btn" href="account.html">View your orders</a></div></main>`)}
+function placeOrder(e){
+ e.preventDefault();
+ let f=new FormData(e.target),subtotal=cart.reduce((s,i)=>s+(product(i.id)?.price||0)*i.qty,0);
+ let items=cart.map(i=>({id:i.id,name:product(i.id)?.name||'Handcrafted item',price:product(i.id)?.price||0,qty:i.qty}));
+ let o={id:Date.now().toString().slice(-7),name:f.get('name'),phone:f.get('phone'),email:f.get('email'),address:f.get('address')+', '+f.get('city')+' '+f.get('pin'),payment:f.get('payment'),subtotal,shipping:subtotal>=1999?0:99,total:subtotal+(subtotal>=1999?0:99),date:new Date().toLocaleDateString('en-IN'),status:'Received',items};
+ orders.unshift(o);set('orders',orders);cart=[];set('cart',cart);
+ const whatsappNumber='919390315117';
+ const message=[
+  '🌸 *AVELURA HANDICRAFTS — NEW DEMO ORDER*','',
+  `Order ID: #${o.id}`,`Date: ${o.date}`,'',
+  '*CUSTOMER DETAILS*',`Name: ${o.name}`,`Phone: ${o.phone}`,`Email: ${o.email}`,
+  `Address: ${o.address}`,'','*ORDER ITEMS*',
+  ...items.map(i=>`• ${i.name} × ${i.qty} — ${money(i.price*i.qty)}`),'',
+  `Subtotal: ${money(o.subtotal)}`,`Shipping: ${o.shipping===0?'FREE':money(o.shipping)}`,`*TOTAL: ${money(o.total)}*`,`Payment: ${o.payment}`,'',
+  '_This order was submitted through the Avelura website demo. Please contact the customer to confirm._'
+ ].join('\n');
+ const whatsappUrl=`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+ // Open from the checkout submit gesture. WhatsApp will ask the sender to tap Send.
+ window.open(whatsappUrl,'_blank');
+ shell(`<main class="page-wrap"><div class="empty"><div style="font-size:55px;color:var(--gold)">✿</div><span class="eyebrow">A little joy is on its way</span><h2>Thank you, ${o.name}.</h2><p>Your demo order <b>#${o.id}</b> has been saved on this device.</p><p style="font-size:12px">WhatsApp is opening with the order details addressed to Avelura. In WhatsApp, tap <b>Send</b> to deliver the notification.</p><a class="btn" style="margin:10px" href="${whatsappUrl}" target="_blank" rel="noopener">Send order on WhatsApp ↗</a><a class="btn btn-outline" href="account.html">View your orders</a><p style="font-size:10px;color:var(--muted);margin-top:18px">Demo only: no payment was collected and no shipment was created.</p></div></main>`)
+}
 function previewImage(e){let f=e.target.files[0];if(!f)return;if(f.size>2.5*1024*1024){toast('Please choose an image under 2.5 MB');e.target.value='';return}let r=new FileReader();r.onload=()=>{window.newProductImage=r.result;let im=document.getElementById('preview');im.src=r.result;im.style.display='block'};r.readAsDataURL(f)}
 function saveProduct(e){e.preventDefault();let id=document.getElementById('pid').value;let old=id?product(id):null;let p={id:old?Number(id):Date.now(),name:pname.value,category:pcat.value,price:Number(pprice.value),old:Number(pold.value)||null,stock:Number(pstock.value),tag:ptag.value||'Handcrafted',desc:pdesc.value||'Thoughtfully handcrafted with love.',rating:old?.rating||5,reviews:old?.reviews||0,image:window.newProductImage||old?.image||'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=85'};products=old?products.map(x=>x.id===p.id?p:x):[p,...products];set('products',products);window.newProductImage=null;toast('Your collection has been updated');admin()}
 function editProduct(id){let p=product(id);['pid','pname','pcat','pprice','pold','pstock','ptag','pdesc'].forEach((x)=>document.getElementById(x).value=({pid:p.id,pname:p.name,pcat:p.category,pprice:p.price,pold:p.old||'',pstock:p.stock,ptag:p.tag,pdesc:p.desc})[x]);document.getElementById('formtitle').textContent='Edit handcrafted piece';document.getElementById('productform').scrollIntoView({behavior:'smooth'})}
